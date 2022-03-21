@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"zinxAll/zinx/ziface"
+	"zinxAll/zinx/utils"
 )
 
 type Server struct{
@@ -79,10 +80,10 @@ func(s *Server)AddRouter(router ziface.IRouter){
 
 func NewServer(name string)ziface.IServer{
 	return &Server{
-		Name:name,
+		Name:utils.GlobalObject.Name,
 		IPVersion: "tcp4",
-		IP: "0.0.0.0",
-		Port:9000,
+		IP: utils.GlobalObject.Host,
+		Port:utils.GlobalObject.TcpPort,
 		Router:nil,
 	}
 }
