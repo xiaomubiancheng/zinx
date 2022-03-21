@@ -17,15 +17,15 @@ type Connection struct{
 	ExitChan chan bool
 
 	//路由
-	Router ziface.IRouter
+	MsgHandler ziface.IMsgHandle
 }
 
-func NewConnection(conn *net.TCPConn,connID uint32,router ziface.IRouter)*Connection{
+func NewConnection(conn *net.TCPConn,connID uint32,msgHandler ziface.IMsgHandle)*Connection{
 	c := &Connection{
 		Conn:      conn,
 		isClosed:  false,
 		ConnID:    connID,
-		Router: router,
+		MsgHandler: msgHandler,
 		ExitChan:  make(chan bool,1),
 	}
 	return c
@@ -78,11 +78,7 @@ func (c *Connection)StartReader(){
 		}
 
 		// 从路由中，找到注册绑定的Conn对应的router调用
-		go func(req ziface.IRequest){
-			c.Router.PreHandle(req)
-			c.Router.Handle(req)
-			c.Router.PostHandle(req)
-		}(&req)
+		go c.MsgHandler.DoMsgHandler(&req)
 
 	}
 }
