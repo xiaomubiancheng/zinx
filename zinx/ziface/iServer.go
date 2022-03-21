@@ -6,5 +6,5 @@ type IServer interface {
 	Serve()
 
 	//路由
-	AddRouter(router IRouter)
+	AddRouter(msgID uint32,router IRouter)
 }
