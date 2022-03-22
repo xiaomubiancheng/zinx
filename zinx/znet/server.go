@@ -21,6 +21,10 @@ type Server struct{
 func(s *Server)Start(){
 	fmt.Printf("[start]Server Listenner at IP:%s,Port:%d,\n",s.IP,s.Port)
 
+	// 开启消息队列及worker工作池
+	s.MsgHandler.StartWorkerPool()
+
+
 	go func(){
 		//1.获取一个TCP的地址
 		addr,err  := net.ResolveTCPAddr(s.IPVersion,fmt.Sprintf("%s:%d",s.IP,s.Port))

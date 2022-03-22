@@ -17,6 +17,10 @@ type GlobalObj struct {
 	MaxConn int // 当前服务器主机允许的最大链接数
 	MaxPackageSize uint32 // 数据包最大值
 
+	// 工作池
+	WorkerPoolSize uint32  //当前业务工作Worker池的Goroutine数量
+	MaxWorkerTaskLen uint32 //每个worker对应消息队列的最大值
+
 }
 
 var (
@@ -45,6 +49,8 @@ func init(){
 		Host: "0.0.0.0",
 		MaxConn: 1000,
 		MaxPackageSize: 4096,
+		WorkerPoolSize: 10,
+		MaxWorkerTaskLen: 1024,
 	}
 
 	// 从conf/zinx.json中加载
