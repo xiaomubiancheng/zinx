@@ -22,9 +22,12 @@ type Connection struct{
 
 	// 无缓冲的管道，用于读、写Goroutine之间的消息通信
 	msgChan chan []byte
+
+	//隶属于哪个server
+	TcpServer ziface.IServer
 }
 
-func NewConnection(conn *net.TCPConn,connID uint32,msgHandler ziface.IMsgHandle)*Connection{
+func NewConnection(server ziface.IServer,conn *net.TCPConn,connID uint32,msgHandler ziface.IMsgHandle)*Connection{
 	c := &Connection{
 		Conn:      conn,
 		isClosed:  false,
@@ -32,7 +35,10 @@ func NewConnection(conn *net.TCPConn,connID uint32,msgHandler ziface.IMsgHandle)
 		MsgHandler: msgHandler,
 		ExitChan:  make(chan bool,1),
 		msgChan: make(chan []byte),
+		TcpServer: server,
 	}
+	// 将conn加入到ConnManager中
+	c.TcpServer.GetConnMgr().Add(c)
 	return c
 }
 
@@ -121,6 +127,9 @@ func (c *Connection)Start(){
 	go c.StartReader()
 
 	go c.StartWriter()
+
+	// 执行开发者的hook
+	c.TcpServer.CallOnConnStart(c)
 }
 func (c *Connection)Stop(){
 	fmt.Println("Conn Stop().. ConnID=", c.ConnID)
@@ -131,11 +140,17 @@ func (c *Connection)Stop(){
 	}
 	c.isClosed = true
 
+	//调用开发者注册的 销毁链接之前 需要执行的hook
+	c.TcpServer.CallOnConnStop(c)
+
 	//关闭socket链接
 	c.Conn.Close()
 
 	// 告知Writer关闭
 	c.ExitChan <- true
+
+	// 将当前连接从connMgr中摘除掉
+	c.TcpServer.GetConnMgr().Remove(c)
 
 	//回收资源
 	close(c.ExitChan)
